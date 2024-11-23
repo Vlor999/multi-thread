@@ -14,7 +14,7 @@ set(CMAKE_BUILD_TYPE Debug)
 #########
 # Vous devez editer les lignes suivantes pour y mettre vos logins
 #########
-set(LOGINS login1 login2 login3)
+set(LOGINS zabiegoh adnetw)
 
 # Vérification du renseignement des login
 list(SORT LOGINS)
@@ -43,7 +43,7 @@ set(CMAKE_C_STANDARD 17)
 # CFLAGS for debug and all flags from the libraries sdl/ogg/vorbis from pkg-config
 set(CMAKE_BUILD_TYPE Debug)
 
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${ALLSTRIP_PKG_CFLAGS} -Wall -Wextra -Werror -fanalyzer")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${ALLSTRIP_PKG_CFLAGS} -Wall -Wextra -Werror")
 
 
 ##
