@@ -29,7 +29,7 @@ stream reading and displaying.
 The compilation process use Cmake
 
 To compile:
-	```sh
+	```bash
 	cd build
 	cmake ..
 	make
