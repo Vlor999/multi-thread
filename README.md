@@ -29,13 +29,13 @@ stream reading and displaying.
 The compilation process use Cmake
 
 To compile:
-	```bash
-	cd build
-	cmake ..
-	make
-	make test   # C only
-	make check  # C only
-	```
+```bash
+cd build
+cmake ..
+make
+make test
+make check
+```
 
 ## Goal ##
 
