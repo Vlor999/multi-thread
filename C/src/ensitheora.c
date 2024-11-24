@@ -14,6 +14,7 @@ int tex_iwri = 0;
 static SDL_Window *screen = NULL;
 static SDL_Renderer *renderer = NULL;
 struct TextureDate texturedate[NBTEX] = {};
+pthread_mutex_t affiche_mutex;
 SDL_Rect rect = {};
 
 struct streamstate *theorastrstate = NULL;
@@ -22,7 +23,6 @@ void *draw2SDL(void *arg) {
   int serial = (int)(long long int)arg;
   struct streamstate *s = NULL;
   SDL_Texture *texture = NULL;
-
   attendreTailleFenetre();
 
   // create SDL window (if not done) and renderer
@@ -54,8 +54,11 @@ void *draw2SDL(void *arg) {
 
   // ADD Your code HERE
   /* Protéger l'accès à la hashmap */
+  pthread_mutex_lock(&affiche_mutex);
 
   HASH_FIND_INT(theorastrstate, &serial, s);
+
+  pthread_mutex_unlock(&affiche_mutex);
 
   // END of your modification HERE
 

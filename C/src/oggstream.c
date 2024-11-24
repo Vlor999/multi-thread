@@ -35,7 +35,11 @@ void *theoraStreamReader(void *arg) {
     if (respac == 0) {
       pageReader(vf, &oggtheorastate, &theorapage);
       s = getStreamState(&oggtheorastate, &theorapage, TYPE_THEORA);
-
+      if(!s)
+      {
+        fprintf(stderr, "Error : stream state ! \n");
+        continue;
+      }
       // ignorer le stream vorbis
       if (s->strtype == TYPE_VORBIS)
         continue;
@@ -44,6 +48,8 @@ void *theoraStreamReader(void *arg) {
     } else {
       respac = getPacket(s);
     }
+
+
     switch (respac) {
     case -1:
       s->nbpacketoutsync++;
@@ -128,7 +134,6 @@ void *vorbisStreamReader(void *arg) {
       vorbis2SDL(s);
     }
   }
-
   fclose(vf);
   return 0;
 }

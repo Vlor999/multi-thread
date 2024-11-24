@@ -7,6 +7,7 @@
 #include <theora/theora.h>
 #include <theora/theoradec.h>
 #include <vorbis/codec.h>
+#include <pthread.h>
 
 enum streamtype { TYPE_UNKNOW, TYPE_THEORA, TYPE_VORBIS };
 
