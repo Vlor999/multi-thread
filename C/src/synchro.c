@@ -19,8 +19,8 @@ void envoiTailleFenetre(th_ycbcr_buffer buffer)
     // Lock fenetre
     pthread_mutex_lock(&fenetre_mutex);
 
-    windowsy = buffer[0].width; // modif
-    windowsx = buffer[0].height; // same 
+    windowsx = buffer[0].width; // modif
+    windowsy = buffer[0].height; // same 
     pthread_cond_signal(&fenetre_cond); // envoie signal de changement
     
     // Unlock fenetre
@@ -32,8 +32,10 @@ void attendreTailleFenetre()
     //Lock Fenetre
     pthread_mutex_lock(&fenetre_mutex);
 
-    // Attente du signal de changement
-    pthread_cond_wait(&fenetre_cond, &fenetre_mutex);
+    while(windowsx == 0 || windowsy == 0) // Si la fenetre n'est pas la 
+    {
+        pthread_cond_wait(&fenetre_cond, &fenetre_mutex); // sans la while ca focntionne quand même 
+    }
     
     //Unlock fenetre
     pthread_mutex_unlock(&fenetre_mutex);    
@@ -41,25 +43,15 @@ void attendreTailleFenetre()
 
 void signalerFenetreEtTexturePrete() 
 {
-    // Lock fenetre
     pthread_mutex_lock(&fenetre_mutex);
-
-    // Envoie signal de mouvement
     pthread_cond_signal(&fenetre_cond_texture);
-
-    // Unloc la fenetre
     pthread_mutex_unlock(&fenetre_mutex);
 }
 
 void attendreFenetreTexture() 
 {
-    //Lock la fenetre
     pthread_mutex_lock(&fenetre_mutex);
-
-    // Attente du signal
     pthread_cond_wait(&fenetre_cond_texture, &fenetre_mutex);
-    //Unlock la fenetre
-    
     pthread_mutex_unlock(&fenetre_mutex);
 }
 

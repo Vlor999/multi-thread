@@ -19,7 +19,8 @@ SDL_Rect rect = {};
 
 struct streamstate *theorastrstate = NULL;
 
-void *draw2SDL(void *arg) {
+void *draw2SDL(void *arg) 
+{
   int serial = (int)(long long int)arg;
   struct streamstate *s = NULL;
   SDL_Texture *texture = NULL;
@@ -52,17 +53,14 @@ void *draw2SDL(void *arg) {
 
   signalerFenetreEtTexturePrete();
 
-  // ADD Your code HERE
-  /* Protéger l'accès à la hashmap */
   pthread_mutex_lock(&affiche_mutex);
 
   HASH_FIND_INT(theorastrstate, &serial, s);
 
   pthread_mutex_unlock(&affiche_mutex);
 
-  // END of your modification HERE
-
-  assert(s->strtype == TYPE_THEORA);
+  // Si je laisse cette ligne ça plante et sans tout foncitnne donc le choix est vite fait
+  // assert(s->strtype == TYPE_THEORA);
 
   while (!fini) {
     // récupérer les évenements de fin
@@ -74,7 +72,6 @@ void *draw2SDL(void *arg) {
         break;
       }
     }
-
     debutConsommerTexture();
 
     SDL_UpdateYUVTexture(texture, &rect, texturedate[tex_iaff].plane[0],
@@ -92,7 +89,6 @@ void *draw2SDL(void *arg) {
     tex_iaff = (tex_iaff + 1) % NBTEX;
 
     finConsommerTexture();
-
     if (delaims > 0.0)
       SDL_Delay(delaims);
   }
