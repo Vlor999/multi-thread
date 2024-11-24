@@ -1,10 +1,10 @@
-#include <time.h>
-#include <assert.h>
-#include <pthread.h>
-#include "ensivorbis.h"
 #include "ensitheora.h"
+#include "ensivorbis.h"
 #include "stream_common.h"
 #include "synchro.h"
+#include <assert.h>
+#include <pthread.h>
+#include <time.h>
 
 bool fini = false;
 pthread_t theora2sdlthread;
@@ -13,13 +13,12 @@ pthread_mutex_t control_fini;
 struct timespec datedebut;
 
 int msFromStart() {
-    struct timespec now;
-    clock_gettime(CLOCK_REALTIME, & now);
+  struct timespec now;
+  clock_gettime(CLOCK_REALTIME, &now);
 
-    return (int)((now.tv_sec - datedebut.tv_sec)*1000.0 +
-	      (now.tv_nsec - datedebut.tv_nsec)/1000000.0);
+  return (int)((now.tv_sec - datedebut.tv_sec) * 1000.0 +
+               (now.tv_nsec - datedebut.tv_nsec) / 1000000.0);
 }
-
 
 void pageReader(FILE *vf, ogg_sync_state *pstate, ogg_page *ppage) {
   // lire une page theora
@@ -42,9 +41,8 @@ void pageReader(FILE *vf, ogg_sync_state *pstate, ogg_page *ppage) {
       // écriture des données dans l'automate de décodage
       ogg_sync_wrote(pstate, bytes);
 
-	res = ogg_sync_pageout( pstate, ppage );
-    }
-
+    res = ogg_sync_pageout(pstate, ppage);
+  }
 }
 
 struct streamstate *getStreamState(
@@ -108,9 +106,9 @@ int addPageGetPacket(ogg_page *ppage, struct streamstate *s)
   int res = ogg_stream_pagein(&s->strstate, ppage);
   assert(res == 0);
 
-    // retirer un packet du stream
-    int respac = ogg_stream_packetout( & s->strstate, & s->packet );
-    return respac;
+  // retirer un packet du stream
+  int respac = ogg_stream_packetout(&s->strstate, &s->packet);
+  return respac;
 }
 
 int getPacket(struct streamstate *s) 
@@ -119,7 +117,6 @@ int getPacket(struct streamstate *s)
   int respac = ogg_stream_packetout(&s->strstate, &s->packet);
   return respac;
 }
-
 
 /* decode headers and update stream structure */
 /* create additional threads if the stream is of the right type */
@@ -147,13 +144,12 @@ int decodeAllHeaders(int respac, struct streamstate *s, enum streamtype type)
         return 1;
       }
 
-            // premier packet de données theora
-	    // allocation du contexte
-	    s->th_dec.ctx = th_decode_alloc(& s->th_dec.info,
-					    s->th_dec.setup);
-	    assert(s->th_dec.ctx != NULL);
-	    assert(s->strtype == TYPE_THEORA);
-	    s->headersRead = true;
+      // premier packet de données theora
+      // allocation du contexte
+      s->th_dec.ctx = th_decode_alloc(&s->th_dec.info, s->th_dec.setup);
+      assert(s->th_dec.ctx != NULL);
+      assert(s->strtype == TYPE_THEORA);
+      s->headersRead = true;
 
       if (type == TYPE_THEORA) 
       {

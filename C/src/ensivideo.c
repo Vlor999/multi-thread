@@ -1,11 +1,10 @@
+#include <SDL2/SDL.h>
+#include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <assert.h>
-#include <SDL2/SDL.h>
-#include <pthread.h>
 
-#include "stream_common.h"
 #include "oggstream.h"
+#include "stream_common.h"
 #include "synchro.h"
 
 #include <pthread.h>
@@ -56,10 +55,10 @@ int main(int argc, char *argv[])
   }
   assert(argc == 2);
 
-    // Initialisation de la SDL
-    res = SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO|SDL_INIT_EVENTS);
-    atexit(SDL_Quit);
-    assert(res == 0);
+  // Initialisation de la SDL
+  res = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS);
+  atexit(SDL_Quit);
+  assert(res == 0);
 
   // Your code HERE
   // start the two stream readers (theoraStreamReader and vorbisStreamReader)

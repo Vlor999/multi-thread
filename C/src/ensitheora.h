@@ -1,18 +1,17 @@
 #ifndef THEORA_H
 #define THEORA_H
 
-#include <ogg/ogg.h>
-#include <SDL2/SDL.h>
 #include "ensivideo.h"
+#include <SDL2/SDL.h>
+#include <ogg/ogg.h>
 
 #define NBTEX 30
 
 struct TextureDate {
-    unsigned char *plane[3]; // copy of plane are contiguous, thus
-			     // stride is width
-    double timems; // expiration date of the frame, in ms
+  unsigned char *plane[3]; // copy of plane are contiguous, thus
+                           // stride is width
+  double timems;           // expiration date of the frame, in ms
 };
-
 
 extern struct streamstate *theorastrstate;
 

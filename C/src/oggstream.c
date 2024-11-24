@@ -1,14 +1,15 @@
-#include <stdio.h>
-#include <assert.h>
-#include <ogg/ogg.h>
-#include "stream_common.h"
 #include "ensitheora.h"
 #include "ensivorbis.h"
+#include "stream_common.h"
 #include "synchro.h"
+#include <assert.h>
+#include <ogg/ogg.h>
+#include <stdio.h>
 
-
-ogg_sync_state   oggtheorastate, oggvorbisstate; /* sync and verify incoming physical bitstream */
-ogg_page         theorapage, vorbispage; /* one Ogg bitstream page. Vorbis packets are inside */
+ogg_sync_state oggtheorastate,
+    oggvorbisstate; /* sync and verify incoming physical bitstream */
+ogg_page theorapage,
+    vorbispage; /* one Ogg bitstream page. Vorbis packets are inside */
 
 void *theoraStreamReader(void *arg) 
 {
@@ -112,9 +113,9 @@ void *vorbisStreamReader(void *arg)
       pageReader(vf, &oggvorbisstate, &vorbispage);
       s = getStreamState(&oggvorbisstate, &vorbispage, TYPE_VORBIS);
 
-	    // ignorer le stream theora
-	    if (s->strtype == TYPE_THEORA)
-		continue;
+      // ignorer le stream theora
+      if (s->strtype == TYPE_THEORA)
+        continue;
 
       // ajouter la page dans le décodeur et tenter d'extraire un
       // packet
