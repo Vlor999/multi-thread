@@ -1,25 +1,23 @@
-#include <time.h>
-#include <assert.h>
-#include <pthread.h>
-#include "ensivorbis.h"
 #include "ensitheora.h"
+#include "ensivorbis.h"
 #include "stream_common.h"
 #include "synchro.h"
+#include <assert.h>
+#include <pthread.h>
+#include <time.h>
 
 bool fini = false;
 pthread_t theora2sdlthread;
-pthread_mutex_t control_fini;
 
 struct timespec datedebut;
 
 int msFromStart() {
-    struct timespec now;
-    clock_gettime(CLOCK_REALTIME, & now);
+  struct timespec now;
+  clock_gettime(CLOCK_REALTIME, &now);
 
-    return (int)((now.tv_sec - datedebut.tv_sec)*1000.0 +
-	      (now.tv_nsec - datedebut.tv_nsec)/1000000.0);
+  return (int)((now.tv_sec - datedebut.tv_sec) * 1000.0 +
+               (now.tv_nsec - datedebut.tv_nsec) / 1000000.0);
 }
-
 
 void pageReader(FILE *vf, ogg_sync_state *pstate, ogg_page *ppage) {
   // lire une page theora
@@ -33,30 +31,26 @@ void pageReader(FILE *vf, ogg_sync_state *pstate, ogg_page *ppage) {
     int bytes = fread(buffer, 1, 4096, vf);
     if (bytes == 0 && feof(vf)) {
       printf("fin du fichier\n");
-      pthread_mutex_lock(&control_fini);
       fini = true;
-      pthread_mutex_lock(&control_fini);
       exit(EXIT_FAILURE); // ou juste return ?
     }
     if (bytes > 0)
       // écriture des données dans l'automate de décodage
       ogg_sync_wrote(pstate, bytes);
 
-	res = ogg_sync_pageout( pstate, ppage );
-    }
-
+    res = ogg_sync_pageout(pstate, ppage);
+  }
 }
 
-struct streamstate *getStreamState(
-  ogg_sync_state *pstate, ogg_page *ppage, enum streamtype type) {
+struct streamstate *getStreamState(ogg_sync_state *pstate, ogg_page *ppage,
+                                   enum streamtype type) {
   (void)pstate;
   // trouver le stream associé à la page ou le construire
   int serial = ogg_page_serialno(ppage);
   int bos = ogg_page_bos(ppage);
 
   struct streamstate *s = NULL;
-  if (bos) 
-  { // début de stream
+  if (bos) { // début de stream
     s = malloc(sizeof(struct streamstate));
     assert(s != NULL);
     s->serial = serial;
@@ -72,23 +66,18 @@ struct streamstate *getStreamState(
     assert(res == 0);
 
     // ADD Your code HERE
-    // proteger l'accès à la hashmap 
-    pthread_mutex_lock(&affiche_mutex); // Vous ne passerez pas !!!!
+    // proteger l'accès à la hashmap
+    pthread_mutex_lock(&affiche_mutex);
 
     if (type == TYPE_THEORA)
-    {
       HASH_ADD_INT(theorastrstate, serial, s);
-    }
     else
-    {
       HASH_ADD_INT(vorbisstrstate, serial, s);
-    }
-    pthread_mutex_unlock(&affiche_mutex); // Mais si en fait
-  } 
-  else 
-  {
+    
+  } else {
     // proteger l'accès à la hashmap
-    pthread_mutex_lock(&affiche_mutex); // Je voulais mettre des accolades et ca ne fonctionne pas. Le C est vriament mystérieux quand même
+    pthread_mutex_lock(&affiche_mutex);
+
     if (type == TYPE_THEORA)
       HASH_FIND_INT(theorastrstate, &serial, s);
     else
@@ -96,30 +85,28 @@ struct streamstate *getStreamState(
 
     // END of your code modification HERE
     assert(s != NULL);
-    pthread_mutex_unlock(&affiche_mutex);
   }
+  pthread_mutex_unlock(&affiche_mutex);
   assert(s != NULL);
   return s;
 }
 
-int addPageGetPacket(ogg_page *ppage, struct streamstate *s) 
-{
+int addPageGetPacket(ogg_page *ppage, struct streamstate *s) {
+
   // ajout de la page dans le stream
   int res = ogg_stream_pagein(&s->strstate, ppage);
   assert(res == 0);
 
-    // retirer un packet du stream
-    int respac = ogg_stream_packetout( & s->strstate, & s->packet );
-    return respac;
-}
-
-int getPacket(struct streamstate *s) 
-{
   // retirer un packet du stream
   int respac = ogg_stream_packetout(&s->strstate, &s->packet);
   return respac;
 }
 
+int getPacket(struct streamstate *s) {
+  // retirer un packet du stream
+  int respac = ogg_stream_packetout(&s->strstate, &s->packet);
+  return respac;
+}
 
 /* decode headers and update stream structure */
 /* create additional threads if the stream is of the right type */
@@ -127,17 +114,14 @@ int getPacket(struct streamstate *s)
    otherwise return 0;
  */
 
-int decodeAllHeaders(int respac, struct streamstate *s, enum streamtype type) 
-{
+int decodeAllHeaders(int respac, struct streamstate *s, enum streamtype type) {
   // if the packet is complete, decode it
-  if (respac == 1 && (!s->headersRead) && s->strtype != TYPE_VORBIS) 
-  {
+  if (respac == 1 && (!s->headersRead) && s->strtype != TYPE_VORBIS) {
     // try to detect if the packet contain a theora header
     int res = th_decode_headerin(&s->th_dec.info, &s->th_dec.comment,
                                  &s->th_dec.setup, &s->packet);
 
-    if (res != TH_ENOTFORMAT) 
-    {
+    if (res != TH_ENOTFORMAT) {
       // this is a theora
       if (res > 0) {
         // this a theora header
@@ -147,39 +131,37 @@ int decodeAllHeaders(int respac, struct streamstate *s, enum streamtype type)
         return 1;
       }
 
-            // premier packet de données theora
-	    // allocation du contexte
-	    s->th_dec.ctx = th_decode_alloc(& s->th_dec.info,
-					    s->th_dec.setup);
-	    assert(s->th_dec.ctx != NULL);
-	    assert(s->strtype == TYPE_THEORA);
-	    s->headersRead = true;
+      // premier packet de données theora
+      // allocation du contexte
+      s->th_dec.ctx = th_decode_alloc(&s->th_dec.info, s->th_dec.setup);
+      assert(s->th_dec.ctx != NULL);
+      assert(s->strtype == TYPE_THEORA);
+      s->headersRead = true;
 
-      if (type == TYPE_THEORA) 
-      {
+      if (type == TYPE_THEORA) {
+	      // BEGIN your modification HERE
         int *serial_ptr = malloc(sizeof(int));
         *serial_ptr = s->serial;
         pthread_create(&theora2sdlthread, NULL, draw2SDL, (void*)serial_ptr);
+        // lancement du thread gérant l'affichage (draw2SDL)
+        // inserer votre code ici !!
+        // END of your modification
         assert(res == 0);
       }
     }
   }
-  if (respac == 1 && (!s->headersRead) && s->strtype != TYPE_THEORA) 
-  {
+  if (respac == 1 && (!s->headersRead) && s->strtype != TYPE_THEORA) {
     int res = vorbis_synthesis_headerin(&s->vo_dec.info, &s->vo_dec.comment,
                                         &s->packet);
 
-    if (res == OV_ENOTVORBIS && s->strtype == TYPE_VORBIS) 
-    {
+    if (res == OV_ENOTVORBIS && s->strtype == TYPE_VORBIS) {
       // first packet
       res = vorbis_synthesis_init(&s->vo_dec.dsp, &s->vo_dec.info);
       assert(res == 0);
       res = vorbis_block_init(&s->vo_dec.dsp, &s->vo_dec.block);
       assert(res == 0);
       s->headersRead = true;
-    } 
-    else if (res == 0) 
-    {
+    } else if (res == 0) {
       // lecture de l'entete vorbis
       s->strtype = TYPE_VORBIS;
       // ce packet a été complètement traitée

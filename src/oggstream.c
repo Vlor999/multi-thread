@@ -1,17 +1,17 @@
-#include <stdio.h>
-#include <assert.h>
-#include <ogg/ogg.h>
-#include "stream_common.h"
 #include "ensitheora.h"
 #include "ensivorbis.h"
+#include "stream_common.h"
 #include "synchro.h"
+#include <assert.h>
+#include <ogg/ogg.h>
+#include <stdio.h>
 
+ogg_sync_state oggtheorastate,
+    oggvorbisstate; /* sync and verify incoming physical bitstream */
+ogg_page theorapage,
+    vorbispage; /* one Ogg bitstream page. Vorbis packets are inside */
 
-ogg_sync_state   oggtheorastate, oggvorbisstate; /* sync and verify incoming physical bitstream */
-ogg_page         theorapage, vorbispage; /* one Ogg bitstream page. Vorbis packets are inside */
-
-void *theoraStreamReader(void *arg) 
-{
+void *theoraStreamReader(void *arg) {
   char *filename = (char *)arg;
 
   FILE *vf = fopen(filename, "r");
@@ -24,57 +24,50 @@ void *theoraStreamReader(void *arg)
   int respac = 0;
   struct streamstate *s;
 
-  while (!fini) 
-  {
+  while (!fini) {
     // printf("theora loop\n");// vérifier si le fichier ne serait pas fini
-    if (feof(vf)) 
-    {
+    if (feof(vf)) {
       fini = true;
       fclose(vf);
       return 0;
     }
 
-    if (respac == 0) 
-    {
+    if (respac == 0) {
       pageReader(vf, &oggtheorastate, &theorapage);
       s = getStreamState(&oggtheorastate, &theorapage, TYPE_THEORA);
       if(!s)
       {
+        fprintf(stderr, "Error : stream state ! \n");
         continue;
       }
       // ignorer le stream vorbis
       if (s->strtype == TYPE_VORBIS)
-      {
         continue;
-      }
+
       respac = addPageGetPacket(&theorapage, s);
-    } 
-    else 
-    {
+    } else {
       respac = getPacket(s);
     }
 
-    switch (respac) 
-    {
-      case -1:
-        s->nbpacketoutsync++;
-        break;
-      case 0:
-        // more pages (data) are needed to build a full packet
-        continue;
-        break;
-      case 1:
-        s->nbpacket++;
-        break;
+
+    switch (respac) {
+    case -1:
+      s->nbpacketoutsync++;
+      printf("out of sync: gap in data\n");
+      break;
+    case 0:
+      // more pages (data) are needed to build a full packet
+      continue;
+      break;
+    case 1:
+      s->nbpacket++;
+      break;
     }
 
     if (decodeAllHeaders(respac, s, TYPE_THEORA))
-    {
       continue;
-    }
 
-    if (s->strtype == TYPE_THEORA && s->headersRead) 
-    {
+    if (s->strtype == TYPE_THEORA && s->headersRead) {
       theora2SDL(s);
     }
   }
@@ -82,8 +75,7 @@ void *theoraStreamReader(void *arg)
   return 0;
 }
 
-void *vorbisStreamReader(void *arg) 
-{
+void *vorbisStreamReader(void *arg) {
   char *filename = (char *)arg;
 
   FILE *vf = fopen(filename, "r");
@@ -96,57 +88,49 @@ void *vorbisStreamReader(void *arg)
   int respac = 0;
   struct streamstate *s;
 
-  while (!fini) 
-  {
+  while (!fini) {
     // printf ("vorbis loop \n");
     // vérifier si le fichier ne serait pas fini
-    if (feof(vf)) 
-    {
+    if (feof(vf)) {
       fini = true;
       printf("FIN de la lecture de VORBIS !");
       break;
     }
 
-    if (respac == 0) 
-    {
+    if (respac == 0) {
       pageReader(vf, &oggvorbisstate, &vorbispage);
       s = getStreamState(&oggvorbisstate, &vorbispage, TYPE_VORBIS);
 
-	    // ignorer le stream theora
-	    if (s->strtype == TYPE_THEORA)
-		continue;
+      // ignorer le stream theora
+      if (s->strtype == TYPE_THEORA)
+        continue;
 
       // ajouter la page dans le décodeur et tenter d'extraire un
       // packet
       respac = addPageGetPacket(&vorbispage, s);
-    } 
-    else 
-    {
+    } else {
       respac = getPacket(s);
     }
-    switch (respac) 
-    {
-      case -1:
-        s->nbpacketoutsync++;
-        printf("out of sync: gap in data\n");
-        break;
-      case 0:
-        // more pages (data) are needed to build a full packet
-        continue;
-        break;
-      case 1:
-        s->nbpacket++;
-        break;
+
+    switch (respac) {
+    case -1:
+      s->nbpacketoutsync++;
+      printf("out of sync: gap in data\n");
+      break;
+    case 0:
+      // more pages (data) are needed to build a full packet
+      continue;
+      break;
+    case 1:
+      s->nbpacket++;
+      break;
     }
 
     if (decodeAllHeaders(respac, s, TYPE_THEORA))
-    {
       continue;
-    }
 
     // boucle principale de lecture vorbis
-    if (s->strtype == TYPE_VORBIS && s->headersRead) 
-    {
+    if (s->strtype == TYPE_VORBIS && s->headersRead) {
       vorbis2SDL(s);
     }
   }

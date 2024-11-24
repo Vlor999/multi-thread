@@ -1,17 +1,11 @@
-#include "ensitheora.h"
 #include "synchro.h"
+#include "ensitheora.h"
+
+
+bool fini;
 
 /* les variables pour la synchro, ici */
 
-pthread_t affiche;
-pthread_mutex_t fenetre_mutex;
-pthread_mutex_t texture_mutex;
-pthread_cond_t fenetre_cond;
-pthread_cond_t fenetre_cond_texture;
-pthread_cond_t vide;
-pthread_cond_t plein;
-
-int nombre_texture = 0;
 
 /* l'implantation des fonctions de synchro ici */
 void envoiTailleFenetre(th_ycbcr_buffer buffer) 
@@ -65,28 +59,15 @@ void debutConsommerTexture()
     pthread_mutex_unlock(&texture_mutex);
 }
 
-void finConsommerTexture() 
-{
-    pthread_mutex_lock(&texture_mutex);
-    nombre_texture--; // la consoooommmaiton
-    pthread_cond_signal(&plein); // pas plein
-    pthread_mutex_unlock(&texture_mutex);
+void finConsommerTexture() {
+    sem_post(&sem_free_cache);
 }
 
-void debutDeposerTexture() 
-{
-    pthread_mutex_lock(&texture_mutex);
-    while(nombre_texture == NBTEX)
-    {
-        pthread_cond_wait(&plein, &texture_mutex);
-    }
-    pthread_mutex_unlock(&texture_mutex);
+
+void debutDeposerTexture() {
+    sem_wait(&sem_free_cache); //on se prépare à réduire le cache. Max NBTEXT.
 }
 
-void finDeposerTexture() 
-{
-    pthread_mutex_lock(&texture_mutex);
-    nombre_texture++;
-    pthread_cond_signal(&vide);
-    pthread_mutex_unlock(&texture_mutex);
+void finDeposerTexture() {
+    sem_post(&sem_cache);
 }
