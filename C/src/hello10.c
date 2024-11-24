@@ -68,5 +68,6 @@ int main(){
   }
   free(liste);
   destruction(a);
+  
   return EXIT_SUCCESS;
 }
